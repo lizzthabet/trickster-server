@@ -1,27 +1,19 @@
 {
-  "name": "glitch-mvp-node",
+  "name": "nah-server",
   "version": "0.1.0",
-  "description": "A simple Node app built on fastify, instantly up and running.",
+  "description": "a simple static server that doesn't give you want you ask for",
   "main": "server.js",
   "scripts": {
+    "dev": "npx nodemon",
     "start": "node server.js"
   },
+  "author": "lizz thabet",
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
   "dependencies": {
-    "fastify": "^4.21.0",
-    "handlebars": "^4.7.8",
-    "@fastify/view": "^8.0.0",
-    "@fastify/static": "^6.10.2",
-    "@fastify/formbody": "^7.4.0"
+    "express": "^4.18.2"
   },
-  "engines": {
-    "node": "14.x"
-  },
-  "repository": {
-    "url": "https://glitch.com/edit/#!/glitch-mvp-node"
-  },
-  "license": "MIT",
-  "keywords": [
-    "node",
-    "glitch"
-  ]
+  "repository": "https://github.com/lizzthabet/html-sketches"
 }
