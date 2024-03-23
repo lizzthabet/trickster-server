@@ -1,5 +1,5 @@
 {
-  "name": "nah-server",
+  "name": "trickster-server",
   "version": "0.1.0",
   "description": "a simple static server that doesn't give you want you ask for",
   "main": "server.js",
@@ -8,12 +8,11 @@
     "start": "node server.js"
   },
   "author": "lizz thabet",
-  "type": "module",
   "devDependencies": {
     "nodemon": "^3.0.3"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
-  "repository": "https://github.com/lizzthabet/html-sketches"
+  "repository": "https://github.com/lizzthabet/trickster-server"
 }
