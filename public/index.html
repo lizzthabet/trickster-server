@@ -3,20 +3,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>a website is a portal</title>
+    <title>a website is full of tricks</title>
 
     <style>
+      html {
+        
+      }
+
       body {
         background-color: pink;
-        margin: 25px;
+        padding: 25px;
       }
 
       .main {
         border: 2px dotted green;
-        /* subtract twice the margin from body */
-        height: calc(100vh - 50px);
+        box-sixing: border-box;
+        /* subtract twice the padding from body */
+        min-height: calc(100vh - 110px);
         margin: auto;
-        width: 100%;
+        padding: 1rem;
+      }
+      
+      .heading {
+        font-style: italic;
+        color: green;
       }
 
       .picture {
@@ -26,7 +36,7 @@
         flex-wrap: wrap;
         font-style: italic;
         max-width: 300px;
-        margin: 1rem;
+        margin: 0 0 1rem 0;
       } 
 
       img {
@@ -36,6 +46,12 @@
   </head>
   <body>
     <main class="main">
+      <h1 class="heading">
+        Welcome to my trickster web server
+      </h1>
+      <h2 class="heading">
+        where the html stays the same, but nothing else does
+      </h2>
       <figure class="picture">
         <img src="/assets/cat.jpeg" />
         <figcaption>this is a cat</figcaption>
