@@ -2,26 +2,45 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const url = require("url");
-const { readdirSync } = fs;
-const { join, dirname, parse } = path;
+const { readdirSync, readFileSync } = fs;
+const { join, parse } = path;
 const { fileURLToPath } = url;
 
 // Constants
-const SERVER_PORT = process.env.PORT || 9034;
-const WORKING_DIR = "public";
+const SERVER_PORT = process.env.PORT || 9060;
+const PUBLIC_DIR = "public"
+// Note: this is a fake directory path that's referenced on the frontend and used to redirect to Glitch CDN links
+const ASSETS_DIR = "assets"
+const ASSETS_FILE = ".glitch-assets"
+// Add any files that you'd like actually served, no tricks!!
+const ACTUALLY_SERVE_FILENAMES_MATCHING = ["index.html"]
+
+/**
+ * @typedef FileList
+ * @type string[]
+ */
+/**
+ * @typedef ExtensionMap
+ * @type {Object.<string, string[]>}
+ */
 
 // In-memory store
-let indexHtml = undefined;
+/** @type FileList */
 let publicFiles = undefined;
+/** @type ExtensionMap */
 let publicFilesByExt = undefined;
+
+let assetFiles = undefined;
+/** @type ExtensionMap */
+let assetFilesByExt = undefined;
 
 // Helper functions
 function publicPath(path) {
   if (path) {
-    return join(__dirname, WORKING_DIR, path);
+    return join(__dirname, PUBLIC_DIR, path);
   }
 
-  return join(__dirname, WORKING_DIR);
+  return join(__dirname, PUBLIC_DIR);
 }
 
 function normalize(string) {
@@ -33,18 +52,13 @@ function random(min, max) {
 }
 
 function shouldIgnore(path) {
-  const { ext, dir, name } = parse(path);
+  const { ext, base } = parse(path);
   // Ignore any directories
   if (!ext) {
     return true;
   }
 
-  if (path === "index.html" || path === "/") {
-    return true;
-  }
-
-  // Ignore icons folder
-  if (dir.includes("icons")) {
+  if (base === "index.html" || path === "/") {
     return true;
   }
 
@@ -67,9 +81,36 @@ function mapFilesToExt(files) {
 }
 
 function listPublicFiles() {
-  const publicDir = publicPath();
-  const files = readdirSync(publicDir, { encoding: "utf-8", recursive: true });
-  return files.filter((f) => !shouldIgnore(f));
+  try {
+    const publicDir = publicPath();
+    const files = readdirSync(publicDir, { encoding: "utf-8", recursive: true });
+    return files.filter((f) => !shouldIgnore(f));
+  } catch (err) {
+    console.error(`failed to list files from ${PUBLIC_DIR}:`, err)
+    return []
+  }
+}
+
+function listGlitchAssets() {
+  const filesList = []
+  try {
+    const assetPath = join(__dirname, ASSETS_FILE)
+    const glitchFiles = readFileSync(assetPath, { encoding: "utf-8" })
+    glitchFiles.trim().split("\n").forEach((assetString) => {
+      try {
+        const asset = JSON.parse(assetString)
+        if (asset.hasOwnProperty("name") && asset.hasOwnProperty("url")) {
+          filesList.push({ name: asset.name, location: asset.url })
+        }
+      } catch (err) {
+        console.error(`failed to parse glitch asset string "${assetString}" to json`, err)
+      }
+    })
+  } catch (err) {
+    console.error(`failed to list glitch assets from ${ASSETS_FILE}:`, err)
+  }
+
+  return filesList
 }
 
 function getRandomFile(path, list) {
@@ -96,137 +137,54 @@ function getRandomFile(path, list) {
   return selectedPath;
 }
 
-function getIconByExt(ext) {
-  switch (ext) {
-    case ".jpeg":
-    case ".jpg":
-      return "./icons/icon_image1.png";
-    case ".png":
-      return "./icons/icon_image2.png";
-    case ".mov":
-      return "./icons/icon_movie.png";
-    case ".html":
-      return "./icons/icon_portal.png";
-    case ".mp3":
-      return "./icons/icon_sound1.png";
-    case ".txt":
-    case ".md":
-      return "./icons/icon_text.png";
-    case ".pdf":
-      return "./icons/icon_bomb.png";
-    default:
-      return "./icons/icon_icon_unknown.png";
-  }
-}
-
-function generateIndexHtml(files) {
-  const sortedFiles = [...files];
-  // todo: sort alphabetically by file
-  sortedFiles.sort();
-  const tableRows = sortedFiles.map((file) => {
-    const { ext } = parse(file);
-    return `<tr>
-  <td><img src="${getIconByExt(ext)}" role="presentation"/></td>
-  <td><a href="${file}">${file}</a></td>
-</tr>`;
-  });
-  return `<!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Index of /nah</title>
-      <style>
-        html {
-          background-color: pink;
-          font-family: monospace;
-          font-size: 1rem;
-        }
-        h1 {
-          font-family: 'Times New Roman', Times, serif;
-        }
-        a {
-          text-decoration: none;
-        }
-        table {
-          padding: 5px;
-        }
-        td {
-          padding: 5px 15px;
-        }
-        th {
-          text-align: left;
-          font-weight: normal;
-          padding: 5px 15px 15px 15px;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>🌻 Index of /nah</h1>
-      <hr />
-      <table>
-        <thead>
-          <tr>
-            <th scope="col"></th>
-            <th scope="col">Name</th>
-          </tr>
-        </thead>
-        <tbody>
-        ${tableRows.join("\n")}
-        </tbody>
-      </table>
-    </body>
-  </html>
-`;
-}
-
 const app = express();
 
-app.use((_req, res, next) => {
-  if (publicFiles === undefined) {
-    res.send("not ready, try again later");
-    return;
-  }
-
-  next();
-});
-
 // Make my own random middlewhere
-app.use((req, res, next) => {
+app.use("/assets", (req, res, next) => {
   const { path } = req;
   if (shouldIgnore(path)) {
     next();
     return;
   }
 
-  const { ext } = parse(path);
-  const fileToSend = getRandomFile(
-    decodeURI(path),
-    publicFilesByExt[normalize(ext)]
-  );
-  res.sendFile(publicPath(fileToSend));
+  const { ext, base } = parse(path);
+  if (base === "cat.jpg") {
+    // Set max age????
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    // hardcode an asset url for right now
+    res.redirect("https://cdn.glitch.global/86e4d4a9-57b9-46ac-8449-27765a6230ef/dog.jpeg?v=1707691764817")
+  } else if (base === "dog.jpg")
+  {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    // hardcode an asset url for right now
+    res.redirect("https://cdn.glitch.global/86e4d4a9-57b9-46ac-8449-27765a6230ef/cat.jpeg?v=1707691788145")
+  }
+
+  // const fileToSend = getRandomFile(
+  //   decodeURI(path),
+  //   publicFilesByExt[normalize(ext)]
+  // );
+  // res.sendFile(publicPath(fileToSend));
   return;
 });
 
-// Add a static server to "public" folder
-app.use("/icons", express.static("public/icons"));
-
 app.get("/", (req, res) => {
-  if (indexHtml === undefined) {
-    res.send("not ready, try again later");
-  } else {
-    res.send(indexHtml);
-  }
+  res.sendFile(publicPath("index.html"));
 });
 
 app.listen(SERVER_PORT, () => {
   console.log(`* ~ * ~ * Server running on port ${SERVER_PORT} * ~ * ~ *`);
 });
 
-// Set up generative logic after starting app server
+// ** Set up generative logic after starting app server **
 // Get a list of files from public directory
 publicFiles = listPublicFiles();
 // Map that file list by ext type for easy access
 publicFilesByExt = mapFilesToExt(publicFiles);
-// Create an index.html file that'll be created dynamically based on folder content
-indexHtml = generateIndexHtml(publicFiles);
+// Get a list of files from glitch assets
+listGlitchAssets();
+// Map that file list by ext type for easy access
