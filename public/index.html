@@ -18,17 +18,39 @@
         margin: auto;
         width: 100%;
       }
+
+      .picture {
+        border: 2px solid green;
+        display: inline-flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        font-style: italic;
+        max-width: 300px;
+        margin: 1rem;
+      } 
+
+      img {
+        width: 100%;
+      }
     </style>
   </head>
   <body>
     <main class="main">
-      <figure>
-        <img src="/assets/cat.jpg" />
+      <figure class="picture">
+        <img src="/assets/cat.jpeg" />
         <figcaption>this is a cat</figcaption>
       </figure>
-      <figure>
-        <img src="/assets/dog.jpg" />
+      <figure class="picture">
+        <img src="/assets/dog.jpeg" />
         <figcaption>this is a dog</figcaption>
+      </figure>
+      <figure class="picture">
+        <embed src="public/something-else.txt" />
+        <figcaption>this is something else</figcaption>
+      </figure>
+      <figure class="picture">
+        <embed src="public/wow.txt" />
+        <figcaption>i'm amazed</figcaption>
       </figure>
     </main>
   </body>
