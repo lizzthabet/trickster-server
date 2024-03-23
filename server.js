@@ -4,7 +4,6 @@ const path = require("path");
 const url = require("url");
 const { readdirSync, readFileSync } = fs;
 const { join, parse } = path;
-const { fileURLToPath } = url;
 
 // Constants
 const SERVER_PORT = process.env.PORT || 9060;
@@ -145,14 +144,14 @@ function listGlitchAssets() {
   return filesList
 }
 
-const app = express();
-
 function sendAsset(res, location) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.redirect(location);
 }
+
+const app = express();
 
 // Make my own random middlewhere
 app.use("/assets", (req, res, next) => {
@@ -202,24 +201,23 @@ app.get("/", (_req, res) => {
   res.sendFile(publicPath("index.html"));
 });
 
-// Getting to this wildcard route handler
-// means that we actually want to serve the
-// requested file
+// Getting to this wildcard route handler means that we
+// actually want to serve the requested file
 app.get("*", (req, res) => {
-  const { base } = parse(req.path)
+  const { base } = parse(req.path);
   // Check all the files in memory to see if there's a match
-  const filesToCheck = [...assetFiles, ...publicFiles]
-  const fileFound = filesToCheck.find((f) => f.name === base)
+  const filesToCheck = [...assetFiles, ...publicFiles];
+  const fileFound = filesToCheck.find((f) => f.name === base);
   if (fileFound) {
     if (fileFound.location.startsWith("https")) {
-      sendAsset(res, fileFound.location)
-      return
+      sendAsset(res, fileFound.location);
+      return;
     } else {
-      res.sendFile(fileFound.location)
-      return
+      res.sendFile(fileFound.location);
+      return;
     }
   } else {
-    res.sendStatus(404)
+    res.sendStatus(404);
   }
 })
 
