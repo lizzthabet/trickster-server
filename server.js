@@ -7,12 +7,12 @@ const { join, parse } = path;
 
 // Constants
 const SERVER_PORT = process.env.PORT || 9060;
-const PUBLIC_DIR = "public"
+const PUBLIC_DIR = "public";
 // Note: this is a fake directory path that's referenced on the frontend and used to redirect to Glitch CDN links
-const ASSETS_DIR = "assets"
-const ASSETS_FILE = ".glitch-assets"
+const ASSETS_DIR = "assets";
+const ASSETS_FILE = ".glitch-assets";
 // Add any files that you'd like actually served, no tricks!!
-const ACTUALLY_SERVE_FILENAMES_MATCHING = ["index.html"]
+const ACTUALLY_SERVE_FILENAMES_MATCHING = ["index.html"];
 
 /**
  * @typedef File
@@ -62,7 +62,7 @@ function shouldIgnore(path) {
 
 function shouldActuallyServe(path) {
   const { base } = parse(path);
-  if (path === '/' || ACTUALLY_SERVE_FILENAMES_MATCHING.includes(base)) {
+  if (path === "/" || ACTUALLY_SERVE_FILENAMES_MATCHING.includes(base)) {
     return true;
   }
 
@@ -112,42 +112,56 @@ function getRandomFile(path, list) {
 function listPublicFiles() {
   try {
     const publicDir = publicPath();
-    const files = readdirSync(publicDir, { encoding: "utf-8", recursive: true });
-    return files.filter((f) => !shouldIgnore(f)).map((f) => ({ name: f, location: publicPath(f) }));
+    const files = readdirSync(publicDir, {
+      encoding: "utf-8",
+      recursive: true,
+    });
+    return files
+      .filter((f) => !shouldIgnore(f))
+      .map((f) => ({ name: f, location: publicPath(f) }));
   } catch (err) {
-    console.error(`failed to list files from ${PUBLIC_DIR}:`, err)
-    return []
+    console.error(`failed to list files from ${PUBLIC_DIR}:`, err);
+    return [];
   }
 }
 
 function listGlitchAssets() {
   /** @type File[] */
-  const filesList = []
+  const filesList = [];
   try {
-    const assetPath = join(__dirname, ASSETS_FILE)
-    const glitchFiles = readFileSync(assetPath, { encoding: "utf-8" })
-    glitchFiles.trim().split("\n").forEach((assetString) => {
-      try {
-        const asset = JSON.parse(assetString)
-        if (asset.hasOwnProperty("name") && asset.hasOwnProperty("url")) {
-          filesList.push({ name: asset.name, location: asset.url })
+    const assetPath = join(__dirname, ASSETS_FILE);
+    const glitchFiles = readFileSync(assetPath, { encoding: "utf-8" });
+    glitchFiles
+      .trim()
+      .split("\n")
+      .forEach((assetString) => {
+        try {
+          const asset = JSON.parse(assetString);
+          if (asset.hasOwnProperty("name") && asset.hasOwnProperty("url")) {
+            filesList.push({ name: asset.name, location: asset.url });
+          }
+        } catch (err) {
+          // Ignore any errors parsing individual JSON elements
+          console.error(
+            `failed to parse glitch asset string "${assetString}" to json`,
+            err
+          );
         }
-      } catch (err) {
-        // Ignore any errors parsing individual JSON elements
-        console.error(`failed to parse glitch asset string "${assetString}" to json`, err)
-      }
-    })
+      });
   } catch (err) {
-    console.error(`failed to list glitch assets from ${ASSETS_FILE}:`, err)
+    console.error(`failed to list glitch assets from ${ASSETS_FILE}:`, err);
   }
 
-  return filesList
+  return filesList;
 }
 
 function sendAsset(res, location) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
   res.redirect(location);
 }
 
@@ -162,10 +176,13 @@ app.use("/assets", (req, res, next) => {
   }
 
   const { ext } = parse(path);
-  const assetToSend = getRandomFile(decodeURI(path), assetFilesByExt[normalize(ext)])
+  const assetToSend = getRandomFile(
+    decodeURI(path),
+    assetFilesByExt[normalize(ext)]
+  );
   if (assetToSend !== undefined) {
     console.log(`request for ${path} > 👹 > sending ${assetToSend.name}`);
-    sendAsset(res, assetToSend.location)
+    sendAsset(res, assetToSend.location);
   } else {
     console.warn(`request for ${path} > 👹 > sorry not found`);
     res.status(404);
@@ -179,13 +196,13 @@ app.use("/public", (req, res, next) => {
     next();
     return;
   }
-  
+
   const { ext } = parse(path);
   const fileToSend = getRandomFile(
     decodeURI(path),
     publicFilesByExt[normalize(ext)]
   );
-  
+
   if (fileToSend !== undefined) {
     console.log(`request for ${path} > 👹 > sending ${fileToSend.name}`);
     res.sendFile(fileToSend.location);
@@ -194,7 +211,7 @@ app.use("/public", (req, res, next) => {
     console.warn(`request for ${path} > 👹 > sorry not found`);
     res.status(404);
   }
-})
+});
 
 // Always serve the index file on "/"
 app.get("/", (_req, res) => {
@@ -219,7 +236,7 @@ app.get("*", (req, res) => {
   } else {
     res.sendStatus(404);
   }
-})
+});
 
 app.listen(SERVER_PORT, () => {
   console.log(`* ~ * 👹 server running on ${SERVER_PORT} 👹 * ~ *`);
@@ -237,4 +254,4 @@ publicFilesByExt = mapFilesToExt(publicFiles);
 // Get a list of files from glitch assets
 assetFiles = listGlitchAssets();
 // Map that file list by ext type for easy access
-assetFilesByExt = mapFilesToExt(assetFiles)
+assetFilesByExt = mapFilesToExt(assetFiles);
