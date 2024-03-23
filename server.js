@@ -1,143 +1,135 @@
-// import express from "express"
-const express = require("express")
-const fs = require("fs")
-const path = require("path")
-const url = require("url")
-const {readdirSync} = fs
-const {join, dirname, parse} = path
-const {fileURLToPath} = url
-// import { readdirSync } from "fs";
-// import { join, dirname, parse } from "path"
-// import { fileURLToPath } from 'url';
-
-// https://stackoverflow.com/questions/8817423/why-is-dirname-not-defined-in-node-repl
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = dirname(__filename);
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const url = require("url");
+const { readdirSync } = fs;
+const { join, dirname, parse } = path;
+const { fileURLToPath } = url;
 
 // Constants
-const SERVER_PORT = process.env.PORT || 9034
-const WORKING_DIR = "public"
+const SERVER_PORT = process.env.PORT || 9034;
+const WORKING_DIR = "public";
 
 // In-memory store
-let indexHtml = undefined
-let publicFiles = undefined
-let publicFilesByExt = undefined
+let indexHtml = undefined;
+let publicFiles = undefined;
+let publicFilesByExt = undefined;
 
 // Helper functions
 function publicPath(path) {
   if (path) {
-    return join(__dirname, WORKING_DIR, path)
+    return join(__dirname, WORKING_DIR, path);
   }
 
-  return join(__dirname, WORKING_DIR)
+  return join(__dirname, WORKING_DIR);
 }
 
 function normalize(string) {
-  return string.toLowerCase()
+  return string.toLowerCase();
 }
 
 function random(min, max) {
-  return Math.round(Math.random() * (max - min) + min)
+  return Math.round(Math.random() * (max - min) + min);
 }
 
 function shouldIgnore(path) {
-  const { ext, dir, name } = parse(path)
+  const { ext, dir, name } = parse(path);
   // Ignore any directories
   if (!ext) {
-    return true
+    return true;
   }
 
   if (path === "index.html" || path === "/") {
-    return true
+    return true;
   }
 
   // Ignore icons folder
   if (dir.includes("icons")) {
-    return true
+    return true;
   }
 
-  return false
+  return false;
 }
 
 function mapFilesToExt(files) {
-  const extMap = {}
+  const extMap = {};
   // Create a map of extensions to filenames
-  files.forEach(filename => {
-    const { ext } = parse(filename)
-    const e = normalize(ext)
+  files.forEach((filename) => {
+    const { ext } = parse(filename);
+    const e = normalize(ext);
     if (!extMap.hasOwnProperty(e)) {
-      extMap[e] = []
+      extMap[e] = [];
     }
-    extMap[e].push(filename)
-  })
+    extMap[e].push(filename);
+  });
 
-  return extMap
+  return extMap;
 }
 
 function listPublicFiles() {
-  const publicDir = publicPath()
-  const files = readdirSync(publicDir, { encoding: 'utf-8', recursive: true })
-  return files.filter(f => !shouldIgnore(f))
+  const publicDir = publicPath();
+  const files = readdirSync(publicDir, { encoding: "utf-8", recursive: true });
+  return files.filter((f) => !shouldIgnore(f));
 }
 
 function getRandomFile(path, list) {
   if (!list || list.length < 2) {
-    return path
+    return path;
   }
 
-  const { name: oldName } = parse(path)
-  let tries = 0
-  let selectedName = oldName
-  let selectedPath = path
+  const { name: oldName } = parse(path);
+  let tries = 0;
+  let selectedName = oldName;
+  let selectedPath = path;
 
   while (tries <= 10 && selectedName === oldName) {
-    const randomIndex = random(0, list.length - 1)
-    const selectedFile = list[randomIndex]
+    const randomIndex = random(0, list.length - 1);
+    const selectedFile = list[randomIndex];
     if (selectedFile) {
-      const { name: newName } = parse(selectedFile)
-      selectedName = newName
-      selectedPath = selectedFile
+      const { name: newName } = parse(selectedFile);
+      selectedName = newName;
+      selectedPath = selectedFile;
     }
-    tries++
+    tries++;
   }
 
-  return selectedPath
+  return selectedPath;
 }
 
 function getIconByExt(ext) {
   switch (ext) {
     case ".jpeg":
     case ".jpg":
-      return "./icons/icon_image1.png"
+      return "./icons/icon_image1.png";
     case ".png":
-      return "./icons/icon_image2.png"
+      return "./icons/icon_image2.png";
     case ".mov":
-      return "./icons/icon_movie.png"
+      return "./icons/icon_movie.png";
     case ".html":
-      return "./icons/icon_portal.png"
+      return "./icons/icon_portal.png";
     case ".mp3":
-      return "./icons/icon_sound1.png"
+      return "./icons/icon_sound1.png";
     case ".txt":
     case ".md":
-      return "./icons/icon_text.png"
+      return "./icons/icon_text.png";
     case ".pdf":
-      return "./icons/icon_bomb.png"
+      return "./icons/icon_bomb.png";
     default:
-      return "./icons/icon_icon_unknown.png"
+      return "./icons/icon_icon_unknown.png";
   }
 }
 
 function generateIndexHtml(files) {
-  const sortedFiles = [...files]
+  const sortedFiles = [...files];
   // todo: sort alphabetically by file
-  sortedFiles.sort()
-  const tableRows = sortedFiles.map(file => {
-    const { ext } = parse(file)
+  sortedFiles.sort();
+  const tableRows = sortedFiles.map((file) => {
+    const { ext } = parse(file);
     return `<tr>
   <td><img src="${getIconByExt(ext)}" role="presentation"/></td>
   <td><a href="${file}">${file}</a></td>
-</tr>`
-  })
+</tr>`;
+  });
   return `<!DOCTYPE html>
   <html lang="en">
     <head>
@@ -185,54 +177,56 @@ function generateIndexHtml(files) {
       </table>
     </body>
   </html>
-
-`
+`;
 }
 
-const app = express()
+const app = express();
 
 app.use((_req, res, next) => {
   if (publicFiles === undefined) {
-    res.send("not ready, try again later")
-    return
+    res.send("not ready, try again later");
+    return;
   }
 
-  next()
-})
+  next();
+});
 
 // Make my own random middlewhere
 app.use((req, res, next) => {
-  const { path } = req
+  const { path } = req;
   if (shouldIgnore(path)) {
-    next()
-    return
+    next();
+    return;
   }
 
-  const { ext } = parse(path)
-  const fileToSend = getRandomFile(decodeURI(path), publicFilesByExt[normalize(ext)])
-  res.sendFile(publicPath(fileToSend))
-  return
-})
+  const { ext } = parse(path);
+  const fileToSend = getRandomFile(
+    decodeURI(path),
+    publicFilesByExt[normalize(ext)]
+  );
+  res.sendFile(publicPath(fileToSend));
+  return;
+});
 
 // Add a static server to "public" folder
-app.use("/icons", express.static("public/icons"))
+app.use("/icons", express.static("public/icons"));
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   if (indexHtml === undefined) {
-    res.send("not ready, try again later")
+    res.send("not ready, try again later");
   } else {
-    res.send(indexHtml)
+    res.send(indexHtml);
   }
-})
+});
 
 app.listen(SERVER_PORT, () => {
-  console.log(`* ~ * ~ * Server running on port ${SERVER_PORT} * ~ * ~ *`)
-})
+  console.log(`* ~ * ~ * Server running on port ${SERVER_PORT} * ~ * ~ *`);
+});
 
 // Set up generative logic after starting app server
 // Get a list of files from public directory
-publicFiles = listPublicFiles()
+publicFiles = listPublicFiles();
 // Map that file list by ext type for easy access
-publicFilesByExt = mapFilesToExt(publicFiles)
+publicFilesByExt = mapFilesToExt(publicFiles);
 // Create an index.html file that'll be created dynamically based on folder content
-indexHtml = generateIndexHtml(publicFiles)
+indexHtml = generateIndexHtml(publicFiles);
