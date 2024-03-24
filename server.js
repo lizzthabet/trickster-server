@@ -8,10 +8,8 @@ const { join, parse } = path;
 // Constants
 const SERVER_PORT = process.env.PORT || 9060;
 const PUBLIC_DIR = "public";
-// Note: this is a fake directory path that's referenced on the frontend and used to redirect to Glitch CDN links
-const ASSETS_DIR = "assets";
 const ASSETS_FILE = ".glitch-assets";
-// Add any files that you'd like actually served, no tricks!!
+// Add any files that you'd like actually served up by this server, no tricks!!
 const ACTUALLY_SERVE_FILENAMES_MATCHING = ["index.html"];
 
 /**
@@ -165,9 +163,11 @@ function sendAsset(res, location) {
   res.redirect(location);
 }
 
+// Server and request handlers
 const app = express();
 
-// Make my own random middlewhere
+// Handler for any Glitch assets, where the request is for
+// the path "/asset/filename.jpg"
 app.use("/assets", (req, res, next) => {
   const { path } = req;
   if (shouldActuallyServe(path)) {
@@ -190,6 +190,9 @@ app.use("/assets", (req, res, next) => {
   return;
 });
 
+// Handler for any files in the "public" folder, which usually
+// includes js, css, html, and anything else not considered an asset
+// and request matches the path "public/some-page.html"
 app.use("/public", (req, res, next) => {
   const { path } = req;
   if (shouldActuallyServe(path)) {
