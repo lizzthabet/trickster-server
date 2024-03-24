@@ -167,7 +167,7 @@ function sendAsset(res, location) {
 const app = express();
 
 // Handler for any Glitch assets, where the request is for
-// the path "/asset/filename.jpg"
+// the path "/assets/filename.jpg"
 app.use("/assets", (req, res, next) => {
   const { path } = req;
   if (shouldActuallyServe(path)) {
