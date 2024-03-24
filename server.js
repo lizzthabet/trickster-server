@@ -181,10 +181,10 @@ app.use("/assets", (req, res, next) => {
     assetFilesByExt[normalize(ext)]
   );
   if (assetToSend !== undefined) {
-    console.log(`request for ${path} > 👹 > sending ${assetToSend.name}`);
+    console.log(`request for ${path} > 👻 > sending ${assetToSend.name}`);
     sendAsset(res, assetToSend.location);
   } else {
-    console.warn(`request for ${path} > 👹 > sorry not found`);
+    console.warn(`request for ${path} > 👻 > sorry not found`);
     res.status(404);
   }
   return;
@@ -207,11 +207,11 @@ app.use("/public", (req, res, next) => {
   );
 
   if (fileToSend !== undefined) {
-    console.log(`request for ${path} > 👹 > sending ${fileToSend.name}`);
+    console.log(`request for ${path} > 👻 > sending ${fileToSend.name}`);
     res.sendFile(fileToSend.location);
     return;
   } else {
-    console.warn(`request for ${path} > 👹 > sorry not found`);
+    console.warn(`request for ${path} > 👻 > sorry not found`);
     res.status(404);
   }
 });
@@ -242,7 +242,7 @@ app.get("*", (req, res) => {
 });
 
 app.listen(SERVER_PORT, () => {
-  console.log(`* ~ * 👹 server running on ${SERVER_PORT} 👹 * ~ *`);
+  console.log(`* ~ * 👻 server running on ${SERVER_PORT} 👻 * ~ *`);
 });
 
 /**

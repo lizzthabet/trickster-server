@@ -1,7 +1,5 @@
 # Trickster static web server
 
-<div class="glitchButton"></div><script src="https://button.glitch.me/button.js"></script>
-
 This is a remixable Glitch project with a static web server that won't give you want you ask for. Use it to build surprising, playful, unstable, and ...maybe even unusable, websites.
 
 A static web server is (traditionally) responsible for responding with whatever file is being requested. So when you click on a link `<a href="pages/about-me.html">Read more about me</a>`, a static web server will check to see if it has a file `about-me.html` in the `/pages` directory and then send that file if it has it. 
