@@ -1,7 +1,5 @@
 # Trickster static web server
 
-![screenshot of sample website that says: "welcome to my trickster web server, where the html stays the same, but nothing else does"](https://cdn.glitch.global/86e4d4a9-57b9-46ac-8449-27765a6230ef/preview.png?v=1711304725822)
-
 This is a remixable Glitch project with a static web server that won't give you want you ask for. Use it to build surprising, playful, unstable, and ...maybe even unusable, websites.
 
 A static web server is (traditionally) responsible for responding with whatever file is being requested. So when you click on a link `<a href="pages/about-me.html">Read more about me</a>`, a static web server will check to see if it has a file `about-me.html` in the `/pages` directory and then send that file if it has it. 
@@ -28,3 +26,5 @@ This project comes with a few files and assets to show how the basic functionali
 
 ## Contributing
 If you find a bug or want to suggest an improvement to this project, head over to [Github](https://github.com/lizzthabet/trickster-server). I'll do my best to respond to issues and PRs. :)
+
+![screenshot of sample website that says: "welcome to my trickster web server, where the html stays the same, but nothing else does"](https://cdn.glitch.global/86e4d4a9-57b9-46ac-8449-27765a6230ef/preview.png?v=1711304725822)

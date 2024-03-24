@@ -1,6 +1,6 @@
 {
   "name": "trickster-server",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "a simple static server that doesn't give you want you ask for",
   "main": "server.js",
   "scripts": {
